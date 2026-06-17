@@ -236,6 +236,80 @@ SOFTWARE = [
         "active_since": 2005,
         "note": 'Exact phrase "CIVx" + PIV phrase',
     },
+    {
+        "id": "mpiv",
+        "name": "mpiv",
+        "category": "Open Source",
+        "developer": "N. Mori & K.-A. Chang",
+        "url": "https://www.mathworks.com/matlabcentral/fileexchange/2411-mpiv",
+        "color": "#9C27B0",
+        # "mpiv" alone is contaminated: it matches "uPIV"/"micro-PIV" tokenisation
+        # (bare "mpiv" + PIV phrase = 120, mostly microfluidics/blood-flow papers).
+        # The toolbox is canonically cited as "mpiv (Mori & Chang, 2003)", so we
+        # require both author surnames.  Empirical (2010-2025): bare=120, +Mori=42,
+        # +Mori+Chang=35 (clean: riverine, tidal, estuary, bacterial, cloud PIV).
+        "fulltext_query": '"mpiv" AND "Mori" AND "Chang" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2003,
+        "note": '"mpiv" AND "Mori" AND "Chang" + PIV phrase (authors required: bare "mpiv" matches micro-PIV/uPIV)',
+    },
+    {
+        "id": "dpivsoft",
+        "name": "DPIVSoft",
+        "category": "Open Source",
+        "developer": "P. Meunier & T. Leweke",
+        "url": "https://github.com/PIVSOFT",
+        "color": "#009688",
+        # "DPIVSoft" is a highly specific token; 22/23 results co-occur with the
+        # author "Meunier".  Empirical (2010-2025): "DPIVSoft" + PIV = 23 (clean).
+        "fulltext_query": '"DPIVSoft" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2003,
+        "note": 'Exact phrase "DPIVSoft" + PIV phrase (specific token; 22/23 co-occur with Meunier)',
+    },
+    {
+        "id": "pivsuite",
+        "name": "PIVsuite",
+        "category": "Open Source",
+        "developer": "PIVsuite project",
+        "url": "https://www.mathworks.com/matlabcentral/fileexchange/45028-pivsuite",
+        "color": "#3949AB",
+        # Bare "PIVsuite" is specific and clean.  The two-word "PIV suite" is
+        # generic and rejected (only +1 net, risks "suite of PIV tools" phrasing).
+        # Empirical (2010-2025): "PIVsuite" + PIV = 6.
+        "fulltext_query": '"PIVsuite" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2014,
+        "note": 'Exact phrase "PIVsuite" + PIV phrase ("PIV suite" 2-word rejected as generic)',
+    },
+    {
+        "id": "fluere",
+        "name": "Fluere",
+        "category": "Free / Academic",
+        "developer": "Fluere project",
+        "url": "https://www.softpedia.com/get/Science-CAD/Fluere.shtml",
+        "color": "#7CB342",
+        # "Fluere" is Latin for "to flow"; requiring the PIV phrase removes
+        # non-software uses.  Empirical (2010-2025): "Fluere" + PIV = 7 (all PIV).
+        "fulltext_query": '"Fluere" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2010,
+        "note": 'Exact phrase "Fluere" + PIV phrase (PIV phrase removes Latin-word false positives)',
+    },
+    {
+        "id": "edpiv",
+        "name": "EDPIV",
+        "category": "Free / Academic",
+        "developer": "L. Gui",
+        "url": "http://www.lcgui.net/",
+        "color": "#F4511E",
+        # "EDPIV" (Easy Digital PIV) is a specific token.  Empirical (2010-2025):
+        # "EDPIV" + PIV = 10 (river surface velocimetry, microfluidics — all clean).
+        "fulltext_query": '"EDPIV" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2003,
+        "note": 'Exact phrase "EDPIV" + PIV phrase (specific token; clean)',
+    },
     # ---- Commercial (company name required) ----
     {
         "id": "lavision_davis",
@@ -255,16 +329,20 @@ SOFTWARE = [
     },
     {
         "id": "dantec_ds",
-        "name": "Dantec Dynamic Studio",
+        "name": "Dantec Dynamic Studio / FlowManager",
         "category": "Commercial",
         "developer": "Dantec Dynamics",
         "url": "https://www.dantecdynamics.com/dynamicstudio/",
         "color": "#FF6F00",
-        # Company "Dantec" AND software "Dynamic Studio" AND PIV phrase
-        "fulltext_query": '"Dantec" AND ("Dynamic Studio" OR "dynamicstudio") AND "particle image velocimetry"',
+        # Company "Dantec" AND software (DynamicStudio = current, FlowManager =
+        # its pre-2010 predecessor) AND PIV phrase.  FlowManager merged in here
+        # since it is the same vendor's earlier PIV package.  Requiring "Dantec"
+        # disambiguates the generic two-word "Flow Manager" spelling.
+        # Empirical (2010-2025): DynamicStudio-only=404, +FlowManager/Flow Manager=463.
+        "fulltext_query": '"Dantec" AND ("Dynamic Studio" OR "dynamicstudio" OR "FlowManager" OR "Flow Manager") AND "particle image velocimetry"',
         "cite_ids": [],
         "active_since": 1998,
-        "note": '"Dantec" AND ("Dynamic Studio" OR "dynamicstudio") AND PIV phrase',
+        "note": '"Dantec" AND (DynamicStudio | FlowManager spellings) AND PIV phrase (FlowManager = pre-2010 predecessor, merged)',
     },
     {
         "id": "tsi_insight",
