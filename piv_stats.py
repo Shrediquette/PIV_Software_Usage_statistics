@@ -1323,13 +1323,15 @@ function toggleSection(h2) {{
 <div class="section">
   <h2 onclick="toggleSection(this)" class="collapsed">Methodology <span class="toggle-icon">▼</span></h2>
   <div class="section-body hidden">
-  <div class="note-box" style="border-left:4px solid #C62828">
-    <strong>Who built this:</strong>
-    This tool was built by <strong>William Thielicke, the author of PIVlab</strong>;
-    PIVlab ranks first below. The <em>same metric is applied to every package</em>.
-    The <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics" target="_blank">complete source code</a>
-    and the <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics/blob/main/METHODOLOGY.md" target="_blank">full methodology</a>
-    (including every search query and a reusable recipe) are public, so you can judge the comparison for yourself.
+  <div class="note-box">
+    This tool was built by W. Thielicke (PIVlab). The same metric is applied to
+    every software package. The complete
+    <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics" target="_blank">source code</a>
+    and the full
+    <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics/blob/main/METHODOLOGY.md" target="_blank">methodology</a>
+    (including every search query and a
+    <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics/blob/main/METHODOLOGY.md#build-a-similar-comparison-for-your-field-reusable-ai-prompt" target="_blank">reusable recipe</a>)
+    are public.
   </div>
   <div class="note-box">
     <strong>How every package is counted (same metric for all):</strong>
