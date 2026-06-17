@@ -1323,6 +1323,15 @@ function toggleSection(h2) {{
 <div class="section">
   <h2 onclick="toggleSection(this)" class="collapsed">Methodology <span class="toggle-icon">▼</span></h2>
   <div class="section-body hidden">
+  <div class="note-box" style="border-left:4px solid #C62828">
+    <strong>Conflict of interest, stated openly:</strong>
+    This tool was built by <strong>William Thielicke, the author of PIVlab</strong>,
+    and PIVlab ranks first below. The <em>same metric is applied to every package</em> —
+    no rule favours PIVlab — and the <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics" target="_blank">complete source code is public</a>.
+    Where a query could be made artificially large it was deliberately tightened,
+    <em>including for competitors</em>. Full rationale and a reusable recipe:
+    <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics/blob/main/METHODOLOGY.md" target="_blank">METHODOLOGY.md</a>.
+  </div>
   <div class="note-box">
     <strong>Unified methodology (fair, objective comparison):</strong>
     Every software package is counted with the <em>same metric</em>:
