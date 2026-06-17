@@ -2,6 +2,8 @@
 
 An automated analysis of how Particle Image Velocimetry (PIV) software packages 
 are cited in academic publications, based on data from [OpenAlex](https://openalex.org).
+The methodology is shown here:
+[Methodology](https://github.com/Shrediquette/PIV_Software_Usage_statistics/blob/main/METHODOLOGY.md)
 
 ## What this shows
 
