@@ -6,7 +6,7 @@ PIV Software Academic Usage Statistics
 Fetches data from OpenAlex to compare how often PIV software packages
 appear in the scientific literature, and in which research fields.
 
-Unified methodology (fair, objective comparison across all software):
+Unified methodology (same metric applied across all software):
   - Full-text boolean search using quoted exact phrases:
       default.search:"SoftwareName" AND "particle image velocimetry"
   - "particle image velocimetry" must appear literally in the text —
@@ -19,7 +19,7 @@ Unified methodology (fair, objective comparison across all software):
 This ensures:
   (a) Names are found in full text (title + abstract + body where indexed)
   (b) PIV context is guaranteed by the literal phrase in text
-  (c) Same metric for every package — enables fair, objective comparison
+  (c) Same metric for every package — applied identically across all software
   (d) Quoted phrases prevent stemming false-positives
 
 Run:  python piv_stats.py
@@ -1324,16 +1324,15 @@ function toggleSection(h2) {{
   <h2 onclick="toggleSection(this)" class="collapsed">Methodology <span class="toggle-icon">▼</span></h2>
   <div class="section-body hidden">
   <div class="note-box" style="border-left:4px solid #C62828">
-    <strong>Conflict of interest, stated openly:</strong>
-    This tool was built by <strong>William Thielicke, the author of PIVlab</strong>,
-    and PIVlab ranks first below. The <em>same metric is applied to every package</em> —
-    no rule favours PIVlab — and the <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics" target="_blank">complete source code is public</a>.
-    Where a query could be made artificially large it was deliberately tightened,
-    <em>including for competitors</em>. Full rationale and a reusable recipe:
-    <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics/blob/main/METHODOLOGY.md" target="_blank">METHODOLOGY.md</a>.
+    <strong>Who built this:</strong>
+    This tool was built by <strong>William Thielicke, the author of PIVlab</strong>;
+    PIVlab ranks first below. The <em>same metric is applied to every package</em>.
+    The <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics" target="_blank">complete source code</a>
+    and the <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics/blob/main/METHODOLOGY.md" target="_blank">full methodology</a>
+    (including every search query and a reusable recipe) are public, so you can judge the comparison for yourself.
   </div>
   <div class="note-box">
-    <strong>Unified methodology (fair, objective comparison):</strong>
+    <strong>How every package is counted (same metric for all):</strong>
     Every software package is counted with the <em>same metric</em>:
     <ul style="margin:4px 0">
       <li><strong>Exact-phrase full-text search</strong> via OpenAlex <code>default.search</code>:

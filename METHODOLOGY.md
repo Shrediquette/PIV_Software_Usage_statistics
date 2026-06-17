@@ -1,27 +1,25 @@
 # Methodology
 
 This document explains exactly how the numbers in this project are produced, so
-that the comparison can be judged, criticised, and reproduced. The authoritative
-source is the code itself — [`piv_stats.py`](piv_stats.py) contains every exact
-query. This document is the plain-language companion to it.
+you can judge the comparison for yourself, criticise it, and reproduce it. The
+authoritative source is the code itself — [`piv_stats.py`](piv_stats.py) contains
+every exact query. This document is the plain-language companion to it.
 
 ---
 
-## Conflict of interest — stated openly
+## Who built this
 
-This tool was built by **William Thielicke, the author of PIVlab**, and PIVlab
-ranks first in the results. That is precisely why the methodology below is kept
-neutral and fully transparent:
+This tool was built by **William Thielicke, the author of PIVlab**. PIVlab ranks
+first in the results. The relevant facts, so you can form your own opinion:
 
-- The **same metric is applied to every package** — there is no rule that favours
-  PIVlab, and PIVlab's query is no more permissive than any other.
+- The **same metric is applied to every package** (defined below); PIVlab's query
+  uses the same rules as every other tool's.
 - The **complete source code is public**, so every query can be inspected and
-  re-run by anyone.
-- Where a query could be made artificially large, it was deliberately tightened —
-  **including for competitors** (see the Flownizer and mpiv examples below). The
-  bias correction runs *against* inflation, not toward PIVlab.
+  re-run by anyone:
+  <https://github.com/Shrediquette/PIV_Software_Usage_statistics>
+- Every query, and the reason for it, is documented below and in the report.
 
-If you spot a way the comparison could be made fairer, please open an issue.
+Questions or suggested corrections: please open an issue.
 
 ---
 
@@ -73,12 +71,12 @@ ones. Some real decisions made this way:
 | Case | Problem | Decision |
 |---|---|---|
 | **mpiv** (Mori & Chang) | Bare `"mpiv"` returned 120 papers, but most matched **"μPIV" / micro-PIV** in microfluidics and blood-flow studies — not the toolbox. | Require both author surnames: `"mpiv" AND "Mori" AND "Chang"` → 35 genuine hits. |
-| **Flownizer** | Adding the camera brand "Ditect" inflated the count ~10×, because Ditect cameras are used regardless of which PIV software processes the images. | Use `"Flownizer"` only. **This tightens a competitor's count, not PIVlab's.** |
+| **Flownizer** | Adding the camera brand "Ditect" inflated the count ~10×, because Ditect cameras are used regardless of which PIV software processes the images. | Use `"Flownizer"` only (the camera brand is excluded). |
 | **PaIRS-UniNa** | Unquoted "PaIRS" matches the common English word "pairs" (>10 000 papers). | Require the exact phrase `"PaIRS-UniNa"`. |
 | **PIVsuite** | The two-word "PIV suite" matches generic phrasing like "suite of PIV tools". | Use `"PIVsuite"` only. |
 | **GPIV / PRANA** | "GPIV" appears in medical literature; "prana" is a Sanskrit/yoga term. | The required PIV phrase removes both. |
 
-This is the same standard applied to PIVlab itself: `("PIVlab" OR "PIV lab")` was
+The same procedure was applied to PIVlab itself: `("PIVlab" OR "PIV lab")` was
 adopted only after confirming "PIV lab" co-occurs with genuine PIVlab usage, and
 relaxing the requirement to plain "PIV" was **rejected** because it produced too
 many false positives.
@@ -117,14 +115,14 @@ automatically on the 1st of each month by GitHub Actions.
 ## Build a similar comparison for *your* field (reusable AI prompt)
 
 This project was developed with the help of an AI coding assistant. If you want to
-build an equivalent, unbiased usage comparison for a different set of tools (CFD
-solvers, microscopy packages, statistics software, …), you do **not** need this
-exact code — you can paste the prompt below into your preferred AI tool and adapt
-the bracketed parts. It encodes the same fairness principles used here.
+build an equivalent usage comparison for a different set of tools (CFD solvers,
+microscopy packages, statistics software, …), you do **not** need this exact code
+— you can paste the prompt below into your preferred AI tool and adapt the
+bracketed parts. It encodes the same rules used here.
 
 > I want to compare how often a set of **[software tools / methods]** are mentioned
-> in the academic literature, as an objective, reproducible, non-biased usage
-> statistic. Please write a single Python script that uses the **OpenAlex API**
+> in the academic literature, as a reproducible usage statistic. Please write a
+> single Python script that uses the **OpenAlex API**
 > (free, no key; identify with a `mailto` email in the polite pool) and follows
 > these rules:
 >
@@ -153,4 +151,4 @@ the bracketed parts. It encodes the same fairness principles used here.
 > spelling variants: **[list them]**.
 
 Adapting this for a new domain mainly means changing the required context phrase
-and the tool list — the fairness rules stay the same.
+and the tool list — the rules stay the same.
