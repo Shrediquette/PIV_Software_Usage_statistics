@@ -1591,5 +1591,44 @@ def save_pivlab_timeline_png(df_yearly):
     )
     fig.write_image(OUTPUT_DIR / "pivlab_timeline.png", width=900, height=400, scale=2)
     print(f"  PNG:    {OUTPUT_DIR / 'pivlab_timeline.png'}")
+
+def save_piv_top10_png(df_yearly: pd.DataFrame, df_totals: pd.DataFrame) -> None:
+    top10_names = df_totals.sort_values("total", ascending=False).head(10)["software"].tolist()
+    df_top10 = df_yearly[df_yearly["software"].isin(top10_names)].copy()
+    color_map = {sw["name"]: sw["color"] for sw in SOFTWARE}
+
+    fig = px.line(
+        df_top10,
+        x="year", y="count",
+        color="software",
+        color_discrete_map=color_map,
+        category_orders={"software": top10_names},
+        labels={"count": "Papers per year", "year": "Year", "software": ""},
+    )
+    for trace in fig.data:
+        if trace.name == "PIVlab":
+            trace.line.width = 4
+            trace.marker.size = 8
+        else:
+            trace.line.width = 2
+            trace.marker.size = 4
+    fig.update_traces(mode="lines+markers")
+
+    BG, PLOT_BG, TEXT, GRID = "#1a1a1a", "#222222", "#f5f5f5", "rgba(255,255,255,0.10)"
+    fig.update_layout(
+        paper_bgcolor=BG,
+        plot_bgcolor=PLOT_BG,
+        font=dict(family="Open Sans, Arial, sans-serif", color=TEXT, size=14),
+        title=dict(text="PIV software — papers per year (OpenAlex)", font=dict(size=18, color=TEXT), x=0.01, xanchor="left"),
+        xaxis=dict(gridcolor=GRID, linecolor=GRID, tickfont=dict(size=13), title_font=dict(size=14), title="Year"),
+        yaxis=dict(gridcolor=GRID, linecolor=GRID, tickfont=dict(size=13), title_font=dict(size=14), title="Papers per year"),
+        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=12), orientation="v", x=1.01, y=1),
+        hovermode="x unified",
+        margin=dict(l=65, r=185, t=65, b=60),
+    )
+
+    out = OUTPUT_DIR / "piv_top10.png"
+    fig.write_image(out, width=1000, height=480, scale=2)
+    print(f"  PNG:    {out}")  
 if __name__ == "__main__":
     main()
