@@ -32,12 +32,12 @@ jobs:
         run: |
           mkdir -p docs
           cp output/piv_report.html docs/index.html
-          cp output/pivlab_timeline.png docs/pivlab_timeline.png
+          cp output/piv_top10.png docs/piv_top10.png
 
       - name: Commit and push updated report
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html docs/pivlab_timeline.png
+          git add docs/index.html docs/piv_top10.png
           git diff --staged --quiet || git commit -m "Monthly update $(date +'%Y-%m')"
           git push
