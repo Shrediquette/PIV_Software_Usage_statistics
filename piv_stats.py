@@ -1560,7 +1560,8 @@ def main():
     report_path = OUTPUT_DIR / "piv_report.html"
     report_path.write_text(html, encoding="utf-8")
     print(f"  Report: {report_path}")
-
+    save_pivlab_timeline_png(df_yearly)
+  
     print("Exporting Excel workbook...")
     xl_path = export_excel(all_data, df_yearly, df_totals, df_fields, df_countries, df_impact)
     print(f"  Excel:  {xl_path}")
@@ -1572,6 +1573,23 @@ def main():
 
     return report_path, xl_path
 
-
+def save_pivlab_timeline_png(df_yearly):
+    pivlab = df_yearly[df_yearly["id"] == "pivlab"].copy()
+    fig = px.bar(
+        pivlab,
+        x="year", y="count",
+        labels={"count": "Papers per year", "year": "Year"},
+        title="PIVlab — papers per year (OpenAlex)",
+        color_discrete_sequence=["#1565C0"],
+    )
+    fig.update_layout(
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font_family="Open Sans, Arial, sans-serif",
+        title_font_size=16,
+        margin=dict(l=60, r=30, t=60, b=50),
+    )
+    fig.write_image(OUTPUT_DIR / "pivlab_timeline.png", width=900, height=400, scale=2)
+    print(f"  PNG:    {OUTPUT_DIR / 'pivlab_timeline.png'}")
 if __name__ == "__main__":
     main()
