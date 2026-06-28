@@ -1560,6 +1560,7 @@ def main():
     report_path = OUTPUT_DIR / "piv_report.html"
     report_path.write_text(html, encoding="utf-8")
     print(f"  Report: {report_path}")
+    save_piv_top10_png(df_yearly, df_totals)
     save_pivlab_timeline_png(df_yearly)
   
     print("Exporting Excel workbook...")
