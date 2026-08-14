@@ -592,11 +592,14 @@ def collect_journal_distribution(sw: dict) -> list[dict]:
             for g in groups if g.get("key") and g.get("key_display_name")]
 
 
-def fetch_source_impacts(all_data: dict) -> dict[str, float]:
+def fetch_source_impacts(all_data: dict) -> dict[str, float | None]:
     """Fetch 2yr_mean_citedness for every unique journal seen across all software.
-    Returns {openalex_source_uri: float}. Results are persisted in a single cache file."""
+    Returns {openalex_source_uri: float | None}. A value of None means the lookup
+    failed or the journal has no impact stat, and such journals are EXCLUDED from
+    the weighted mean (rather than counted as a real 0.0, which would bias tools
+    with obscure/newer venues downward). Results are persisted in a cache file."""
     cache_path = _cache_path("source_impacts")
-    cache: dict[str, float] = (
+    cache: dict[str, float | None] = (
         json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
     )
 
@@ -614,10 +617,11 @@ def fetch_source_impacts(all_data: dict) -> dict[str, float]:
             short_id = uri.split("/")[-1]
             try:
                 data = _openalex_get(f"/sources/{short_id}", {})
-                val = (data.get("summary_stats") or {}).get("2yr_mean_citedness") or 0.0
-                cache[uri] = float(val)
+                raw = (data.get("summary_stats") or {}).get("2yr_mean_citedness")
+                # None = genuinely absent; keep it None so it's excluded, not zero.
+                cache[uri] = float(raw) if raw is not None else None
             except Exception:
-                cache[uri] = 0.0
+                cache[uri] = None  # lookup failed -> exclude, don't count as 0
         cache_path.write_text(json.dumps(cache, ensure_ascii=False, indent=2), encoding="utf-8")
         print(" done")
 
@@ -1065,62 +1069,86 @@ def fig_market_share(df_yearly: pd.DataFrame, piv_baseline: dict) -> go.Figure:
 
 
 def build_impact_df(all_data: dict, source_impacts: dict) -> pd.DataFrame:
-    """Weighted mean 2yr_mean_citedness per software (weighted by paper count per journal)."""
+    """Mean venue citedness (JIF proxy) per software, weighted by paper count per
+    journal. Journals whose impact could not be looked up are EXCLUDED (not counted
+    as 0). `n_papers` records how many papers the average is actually based on, so
+    the reader can judge how much evidence each score rests on."""
     rows = []
     for sw_id, dat in all_data.items():
         sw = dat["meta"]
         journals = dat.get("journals", [])
         if not journals:
             continue
-        total_papers = 0
+        n_papers = 0          # papers actually contributing to the average
         weighted_sum = 0.0
         for j in journals:
-            impact = source_impacts.get(j.get("source_id", ""), 0.0) or 0.0
+            impact = source_impacts.get(j.get("source_id", ""))
+            if impact is None:   # no impact stat available -> skip this journal
+                continue
             n = j["count"]
             weighted_sum += impact * n
-            total_papers += n
-        if total_papers > 0:
+            n_papers += n
+        if n_papers > 0:
             rows.append({
                 "software": sw["name"],
                 "category": sw["category"],
-                "weighted_mean_impact": round(weighted_sum / total_papers, 2),
+                "mean_venue_citedness": round(weighted_sum / n_papers, 1),
+                "n_papers": n_papers,
                 "total": dat["total"],
             })
-    return pd.DataFrame(rows).sort_values("weighted_mean_impact", ascending=False)
+    if not rows:
+        return pd.DataFrame(rows)
+    return pd.DataFrame(rows).sort_values("mean_venue_citedness", ascending=False)
 
 
 def fig_journal_impact(df_impact: pd.DataFrame) -> go.Figure:
-    """Horizontal bar chart: weighted mean journal 2yr_mean_citedness per software."""
+    """Horizontal bar chart: mean venue citedness (JIF proxy) per software, with the
+    number of papers each score is based on shown next to every bar so the reader can
+    judge how much evidence a score rests on."""
     if df_impact.empty:
         return go.Figure().update_layout(title="No journal impact data available")
 
-    df = df_impact.sort_values("weighted_mean_impact")
+    # Sort ascending so the highest score sits at the top of the horizontal chart.
+    df = df_impact.sort_values("mean_venue_citedness", ascending=True)
+
     cat_colors = {"Open Source": "#1565C0", "Commercial": "#C62828", "Free / Academic": "#558B2F"}
     colors = [cat_colors.get(c, "#888") for c in df["category"]]
 
+    # Bar label: the score plus the paper count the score rests on.
+    text = [
+        f"{v:.1f}  (n={n})"
+        for v, n in zip(df["mean_venue_citedness"], df["n_papers"])
+    ]
+
     fig = go.Figure(go.Bar(
-        x=df["weighted_mean_impact"],
+        x=df["mean_venue_citedness"],
         y=df["software"],
         orientation="h",
         marker_color=colors,
-        text=[f"{v:.1f}" for v in df["weighted_mean_impact"]],
+        text=text,
         textposition="outside",
-        hovertemplate="<b>%{y}</b><br>Weighted mean impact: %{x:.2f}<extra></extra>",
+        customdata=list(df["n_papers"]),
+        hovertemplate=(
+            "<b>%{y}</b><br>Mean venue citedness: %{x:.2f}"
+            "<br>Based on %{customdata} papers<extra></extra>"
+        ),
     ))
     fig.update_layout(
-        title="Journal Quality — Weighted Mean 2-Year Citedness of Publishing Journals",
-        xaxis_title="Weighted mean 2yr mean citedness (OpenAlex proxy for impact factor)",
+        title="Publication Venue Impact — Mean Journal Citedness (JIF proxy)",
+        xaxis_title="Mean 2yr journal citedness, paper-weighted (OpenAlex proxy for impact factor)",
         yaxis_title="",
         template=PLOTLY_TEMPLATE,
         font_family=FONT_FAMILY,
         height=max(400, 28 * len(df)),
-        margin=dict(r=80, l=200),
+        margin=dict(r=140, l=200),
         showlegend=False,
     )
     fig.add_annotation(
         text=(
-            "OpenAlex '2yr_mean_citedness' per journal, weighted by paper count per software. "
-            "Higher = published in journals that receive more citations on average. "
+            "Mean OpenAlex '2yr_mean_citedness' of the journals each tool appears in, "
+            "weighted by paper count. Reflects VENUE reputation, not software or paper "
+            "quality, and is field-dependent. n = papers the score is based on; scores "
+            "resting on few papers are far less reliable. "
             "Blue = Open Source, Red = Commercial."
         ),
         xref="paper", yref="paper", x=0, y=-0.12,
@@ -1393,14 +1421,19 @@ function toggleSection(h2) {{
 </div>
 
 <div class="section">
-  <h2 onclick="toggleSection(this)">Journal Quality (Impact Indicator) <span class="toggle-icon">▼</span></h2>
+  <h2 onclick="toggleSection(this)">Publication Venue Impact (JIF proxy) <span class="toggle-icon">▼</span></h2>
   <div class="section-body">
   <div class="note-box">
-    Shows the weighted mean <strong>2-year mean citedness</strong> of the journals in which
-    papers mentioning each software are published. This is OpenAlex&rsquo;s open proxy for
-    journal impact factor. A higher score means the software tends to appear in
-    higher-cited journals. This can reveal whether a software is used only in
-    niche or low-visibility outlets.
+    Shows the paper-weighted mean <strong>2-year journal citedness</strong> of the venues in
+    which papers mentioning each software are published &mdash; OpenAlex&rsquo;s open stand-in
+    for the journal impact factor. <strong>Read this carefully:</strong> it measures the citation
+    reputation of the <em>journals</em> a tool appears in, <em>not</em> the quality of the software
+    or of the individual papers. It is also strongly <strong>field-dependent</strong> (e.g.
+    biomedical/microfluidics journals carry higher citedness than experimental fluid-mechanics
+    journals for structural reasons), so tools used in different subfields are not directly
+    comparable here. Bars show <strong>n</strong>, the number of papers each score rests on
+    &mdash; a high score based on only a handful of papers is largely chance and should be read
+    with caution. Treat this chart as a rough indicator, not a verdict.
   </div>
   {fig_to_html(figs["journal_impact"])}
   </div>
