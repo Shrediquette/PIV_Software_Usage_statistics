@@ -1127,6 +1127,7 @@ def fig_journal_impact(df_impact: pd.DataFrame) -> go.Figure:
         marker_color=colors,
         text=text,
         textposition="outside",
+        cliponaxis=False,
         customdata=list(df["n_papers"]),
         hovertemplate=(
             "<b>%{y}</b><br>Mean venue citedness: %{x:.2f}"
@@ -1140,16 +1141,19 @@ def fig_journal_impact(df_impact: pd.DataFrame) -> go.Figure:
         template=PLOTLY_TEMPLATE,
         font_family=FONT_FAMILY,
         height=max(400, 28 * len(df)),
-        margin=dict(r=140, l=200),
+        margin=dict(r=210, l=200),
         showlegend=False,
     )
+    # Give the outside bar labels headroom so the longest bar's "(n=…)" isn't clipped.
+    _max_x = float(df["mean_venue_citedness"].max())
+    fig.update_xaxes(range=[0, _max_x * 1.18])
     fig.add_annotation(
         text=(
             "Mean OpenAlex '2yr_mean_citedness' of the journals each tool appears in, "
             "weighted by paper count. Reflects VENUE reputation, not software or paper "
             "quality, and is field-dependent. n = papers the score is based on; scores "
             "resting on few papers are far less reliable. "
-            "Blue = Open Source, Red = Commercial."
+            "Blue = Open Source, Red = Commercial, Green = Free / Academic."
         ),
         xref="paper", yref="paper", x=0, y=-0.12,
         showarrow=False, font=dict(size=10), align="left",
