@@ -14,7 +14,7 @@ The methodology is shown here:
 
 ## Software covered
 
-24 packages across three categories: Open Source, Free / Academic, and Commercial —
+32 packages across three categories: Open Source, Free / Academic, and Commercial —
 including PIVlab, OpenPIV, MatPIV, LaVision DaVis, Dantec Dynamic Studio, and more.
 
 ## Methodology
