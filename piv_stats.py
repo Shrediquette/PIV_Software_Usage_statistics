@@ -310,6 +310,23 @@ SOFTWARE = [
         "active_since": 2003,
         "note": 'Exact phrase "EDPIV" + PIV phrase (specific token; clean)',
     },
+    {
+        "id": "pivtools",
+        "name": "PIVtools",
+        "category": "Open Source",
+        "developer": "Taylor, Lawson & Ganapathisubramani (Univ. of Southampton)",
+        "url": "https://github.com/MTT69/python-PIVTOOLs",
+        "color": "#00ACC1",
+        # Python PIV framework (planar, stereo, ensemble), GPL-3.0; described in
+        # SoftwareX 35 (2026) 102967, doi:10.1016/j.softx.2026.102967.
+        # Bare "PIVtools" is a specific token; "gpivtools" (the GPIV CLI suite)
+        # is a different token and does not match.  The two-word "PIV tools" is
+        # rejected as generic (same reasoning as "PIV suite").
+        "fulltext_query": '"PIVtools" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2023,
+        "note": 'Exact phrase "PIVtools" + PIV phrase ("PIV tools" 2-word rejected as generic)',
+    },
     # ---- Commercial (company name required) ----
     {
         "id": "lavision_davis",
