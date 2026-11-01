@@ -33,4 +33,12 @@ Updated automatically on the 1st of every month via GitHub Actions.
 
 ```bash
 pip install -r requirements.txt
+export OPENALEX_API_KEY=your_key_here   # free key: https://openalex.org/settings/api
 python piv_stats.py
+```
+
+The script needs a free OpenAlex API key in the `OPENALEX_API_KEY` environment
+variable (on Windows: `set OPENALEX_API_KEY=your_key_here`). For the monthly
+GitHub Actions run, store it as a repository secret with the same name
+(Settings → Secrets and variables → Actions). If OpenAlex refuses requests or
+data comes back incomplete, the run stops without overwriting the published report.

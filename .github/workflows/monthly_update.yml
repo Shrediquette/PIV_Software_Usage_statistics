@@ -27,6 +27,9 @@ jobs:
         run: python piv_stats.py
         env:
           PYTHONUNBUFFERED: "1"
+          # Free key from https://openalex.org/settings/api, stored under
+          # Settings -> Secrets and variables -> Actions -> OPENALEX_API_KEY
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
 
       - name: Publish report to docs/
         run: |

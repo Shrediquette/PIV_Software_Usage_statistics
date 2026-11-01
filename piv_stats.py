@@ -28,6 +28,7 @@ Output: output/piv_report.html   (interactive Plotly report)
 """
 
 import json
+import os
 import re
 import sys
 import time
@@ -51,6 +52,12 @@ CACHE_DIR = Path("cache")
 OUTPUT_DIR = Path("output")
 BASE_URL = "https://api.openalex.org"
 REQUEST_DELAY = 0.15          # seconds between API calls (polite crawling)
+# Free OpenAlex API key (https://openalex.org/settings/api). Without a key the
+# daily budget is tiny and shared per IP address, which is not enough on
+# GitHub's shared runners. Read from the environment so it never lands in git.
+OPENALEX_API_KEY = os.environ.get("OPENALEX_API_KEY", "").strip()
+MAX_RETRIES = 6               # attempts per request on 429 / 5xx / network error
+MAX_RETRY_WAIT = 120          # seconds; if OpenAlex asks for longer, give up
 TOP_N_FIELDS = 12             # fields shown in distributions
 TOP_N_JOURNALS = 10
 TOP_N_COUNTRIES = 15
@@ -487,14 +494,68 @@ _session = requests.Session()
 _session.headers.update({"User-Agent": f"PIVStats/1.0 (mailto:{EMAIL})"})
 
 
+class OpenAlexRateLimited(Exception):
+    """OpenAlex keeps answering 429 (Too Many Requests) even after retrying.
+    Usually this means the daily budget is used up, so there is no point in
+    continuing: every further request would fail too."""
+
+
+def _retry_wait(resp: requests.Response | None, attempt: int) -> float:
+    """Seconds to wait before the next attempt: use the server's Retry-After
+    header if it sent a number, otherwise exponential backoff (2, 4, 8, ...)."""
+    if resp is not None:
+        retry_after = resp.headers.get("Retry-After", "")
+        if retry_after.strip().isdigit():
+            return float(retry_after)
+    return float(2 ** attempt)
+
+
 def _openalex_get(endpoint: str, params: dict) -> dict:
-    """Raw GET with polite delay."""
+    """GET from OpenAlex with API key, polite delay and retries.
+
+    Retries on 429 (rate limited), 5xx (server hiccup) and network errors.
+    If OpenAlex is still saying 429 after all retries, or asks us to wait
+    longer than MAX_RETRY_WAIT, raise OpenAlexRateLimited so the whole run
+    stops instead of quietly recording zeros.
+    """
     p = {"mailto": EMAIL, **params}
+    if OPENALEX_API_KEY:
+        p["api_key"] = OPENALEX_API_KEY
     url = f"{BASE_URL}{endpoint}"
-    resp = _session.get(url, params=p, timeout=60)
-    resp.raise_for_status()
-    time.sleep(REQUEST_DELAY)
-    return resp.json()
+
+    for attempt in range(1, MAX_RETRIES + 1):
+        resp = None
+        try:
+            resp = _session.get(url, params=p, timeout=60)
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            if attempt == MAX_RETRIES:
+                raise
+            wait = _retry_wait(None, attempt)
+            print(f"\n    (network error: {exc}; retry {attempt}/{MAX_RETRIES - 1} "
+                  f"in {wait:.0f}s)", end="", flush=True)
+            time.sleep(wait)
+            continue
+
+        if resp.status_code == 429 or resp.status_code >= 500:
+            wait = _retry_wait(resp, attempt)
+            if attempt == MAX_RETRIES or wait > MAX_RETRY_WAIT:
+                if resp.status_code == 429:
+                    raise OpenAlexRateLimited(
+                        f"OpenAlex still answers 429 Too Many Requests after "
+                        f"{attempt} attempt(s). "
+                        f"The daily request budget is probably used up."
+                    )
+                resp.raise_for_status()
+            print(f"\n    (HTTP {resp.status_code}; retry {attempt}/{MAX_RETRIES - 1} "
+                  f"in {wait:.0f}s)", end="", flush=True)
+            time.sleep(wait)
+            continue
+
+        resp.raise_for_status()
+        time.sleep(REQUEST_DELAY)
+        return resp.json()
+
+    raise RuntimeError("unreachable")  # loop always returns or raises
 
 
 def _cache_path(key: str) -> Path:
@@ -637,6 +698,11 @@ def fetch_source_impacts(all_data: dict) -> dict[str, float | None]:
                 raw = (data.get("summary_stats") or {}).get("2yr_mean_citedness")
                 # None = genuinely absent; keep it None so it's excluded, not zero.
                 cache[uri] = float(raw) if raw is not None else None
+            except OpenAlexRateLimited:
+                # keep what we fetched so far, then stop the run
+                cache_path.write_text(json.dumps(cache, ensure_ascii=False, indent=2),
+                                      encoding="utf-8")
+                raise
             except Exception:
                 cache[uri] = None  # lookup failed -> exclude, don't count as 0
         cache_path.write_text(json.dumps(cache, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -645,12 +711,20 @@ def fetch_source_impacts(all_data: dict) -> dict[str, float | None]:
     return cache
 
 
+_failed_queries: list[str] = []   # every query that failed, for the sanity check
+
+
 def _safe_collect(fn, sw: dict, default):
-    """Run a collection function; return default on error."""
+    """Run a collection function; return default on error (and remember the
+    failure). A rate-limit stop is passed on, because then all later queries
+    would fail as well."""
     try:
         return fn(sw)
+    except OpenAlexRateLimited:
+        raise
     except Exception as exc:
         print(f"\n    (warning: {fn.__name__} failed: {exc})", end="")
+        _failed_queries.append(f"{sw['name']}: {fn.__name__} ({exc})")
         return default
 
 
@@ -1536,11 +1610,12 @@ def export_excel(all_data: dict, df_yearly: pd.DataFrame,
 
         df_fields.to_excel(writer, sheet_name="Field distribution", index=False)
 
-        df_countries_agg = (
-            df_countries.groupby(["country", "country_code"])["count"]
-            .sum().reset_index().sort_values("count", ascending=False)
-        )
-        df_countries_agg.to_excel(writer, sheet_name="Countries (all)", index=False)
+        if not df_countries.empty:
+            df_countries_agg = (
+                df_countries.groupby(["country", "country_code"])["count"]
+                .sum().reset_index().sort_values("count", ascending=False)
+            )
+            df_countries_agg.to_excel(writer, sheet_name="Countries (all)", index=False)
 
         # Per-software country tables
         for sw_id, dat in all_data.items():
@@ -1574,38 +1649,87 @@ def export_excel(all_data: dict, df_yearly: pd.DataFrame,
 # Main
 # ---------------------------------------------------------------------------
 
+def check_data_sane(all_data: dict, piv_baseline: dict) -> list[str]:
+    """Return a list of reasons why the fetched data must NOT be published
+    (empty list = all good). Better to keep last month's report online than
+    to publish a report full of zeros."""
+    problems = []
+    if _failed_queries:
+        problems.append(f"{len(_failed_queries)} OpenAlex queries failed:")
+        problems += [f"    - {q}" for q in _failed_queries[:10]]
+        if len(_failed_queries) > 10:
+            problems.append(f"    ... and {len(_failed_queries) - 10} more")
+    if sum(piv_baseline.values()) == 0:
+        problems.append("The baseline (all PIV papers) is 0.")
+    if sum(dat["total"] for dat in all_data.values()) == 0:
+        problems.append("Every software package has 0 papers.")
+    return problems
+
+
+def _abort(lines: list[str]) -> None:
+    print("\n" + "!" * 70, file=sys.stderr)
+    print("ABORTED - no report written, the published report stays as it is.",
+          file=sys.stderr)
+    for line in lines:
+        print(f"  {line}", file=sys.stderr)
+    print("!" * 70, file=sys.stderr)
+    sys.exit(1)
+
+
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     print(f"\n=== PIV Software Usage Statistics ===")
-    print(f"  Range: {YEAR_MIN}-{YEAR_MAX}  |  {len(SOFTWARE)} software packages\n")
-    print("Fetching data from OpenAlex (cached results reused)...")
-    all_data = collect_all()
+    print(f"  Range: {YEAR_MIN}-{YEAR_MAX}  |  {len(SOFTWARE)} software packages")
+    if OPENALEX_API_KEY:
+        print("  OpenAlex API key: found")
+    else:
+        print("  OpenAlex API key: NOT SET (set the OPENALEX_API_KEY environment "
+              "variable; without it the daily budget is very small)")
+    print("\nFetching data from OpenAlex (cached results reused)...")
 
-    print("  [baseline] Total PIV papers per year ...", end="", flush=True)
     try:
-        piv_baseline = collect_piv_baseline()
-    except Exception as exc:
-        print(f" (warning: {exc})", end="")
-        piv_baseline = {}
-    total_piv = sum(piv_baseline.values())
-    print(f" {total_piv} total PIV papers in OpenAlex")
+        all_data = collect_all()
 
-    print("\nBuilding data frames...")
-    df_yearly = build_yearly_df(all_data)
-    df_totals = build_totals_df(all_data)
-    df_fields = build_fields_df(all_data)
-    df_countries = build_countries_df(all_data)
+        print("  [baseline] Total PIV papers per year ...", end="", flush=True)
+        try:
+            piv_baseline = collect_piv_baseline()
+        except OpenAlexRateLimited:
+            raise
+        except Exception as exc:
+            print(f" (warning: {exc})", end="")
+            _failed_queries.append(f"baseline ({exc})")
+            piv_baseline = {}
+        total_piv = sum(piv_baseline.values())
+        print(f" {total_piv} total PIV papers in OpenAlex")
 
-    print("  Fetching journal impact scores ...", end="", flush=True)
-    try:
-        source_impacts = fetch_source_impacts(all_data)
-        df_impact = build_impact_df(all_data, source_impacts)
-        print(f" {len(source_impacts)} journals looked up")
-    except Exception as exc:
-        print(f" (warning: {exc})")
-        df_impact = pd.DataFrame()
+        problems = check_data_sane(all_data, piv_baseline)
+        if problems:
+            _abort(problems)
+
+        print("\nBuilding data frames...")
+        df_yearly = build_yearly_df(all_data)
+        df_totals = build_totals_df(all_data)
+        df_fields = build_fields_df(all_data)
+        df_countries = build_countries_df(all_data)
+
+        print("  Fetching journal impact scores ...", end="", flush=True)
+        try:
+            source_impacts = fetch_source_impacts(all_data)
+            df_impact = build_impact_df(all_data, source_impacts)
+            print(f" {len(source_impacts)} journals looked up")
+        except OpenAlexRateLimited:
+            raise
+        except Exception as exc:
+            print(f" (warning: {exc})")
+            df_impact = pd.DataFrame()
+    except OpenAlexRateLimited as exc:
+        hint = ("Is the OPENALEX_API_KEY secret set and valid?" if OPENALEX_API_KEY
+                else "No API key was used. Set OPENALEX_API_KEY (free key from "
+                     "https://openalex.org/settings/api).")
+        _abort([str(exc), hint,
+                "Try again later (when run locally, results fetched so far are cached)."])
 
     print("\nGenerating HTML report...")
     html = generate_html_report(all_data, df_yearly, df_totals, df_fields,

@@ -123,7 +123,8 @@ bracketed parts. It encodes the same rules used here.
 > I want to compare how often a set of **[software tools / methods]** are mentioned
 > in the academic literature, as a reproducible usage statistic. Please write a
 > single Python script that uses the **OpenAlex API**
-> (free, no key; identify with a `mailto` email in the polite pool) and follows
+> (free API key read from an environment variable; retry with backoff on HTTP 429;
+> abort instead of writing results if any query fails) and follows
 > these rules:
 >
 > 1. **One identical metric for every tool.** For each tool, count works where the
