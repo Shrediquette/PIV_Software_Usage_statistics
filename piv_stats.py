@@ -1260,16 +1260,15 @@ def build_summary_html(df_totals: pd.DataFrame, all_data: dict) -> str:
         peak_year = max(yearly, key=yearly.get) if yearly else "N/A"
         peak_count = yearly.get(peak_year, 0) if yearly else 0
 
-        # Recent (last 3 years)
-        recent_years = [str(y) for y in range(YEAR_MAX - 2, YEAR_MAX + 1)]
-        recent = sum(yearly.get(y, 0) for y in recent_years)
+        # Recent = last completed year only
+        recent = yearly.get(str(YEAR_MAX), 0)
 
         rows.append({
             "Software": row["software"],
             "Category": row["category"],
             "Developer": row["developer"],
             f"Total ({YEAR_MIN}-{YEAR_MAX})": row["total"],
-            f"Recent ({YEAR_MAX-2}-{YEAR_MAX})": recent,
+            f"Recent ({YEAR_MAX})": recent,
             "Peak year": peak_year,
             "Peak count": peak_count,
             "Top field": top_field,
