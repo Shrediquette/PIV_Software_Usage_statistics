@@ -63,24 +63,19 @@ TOP_N_FIELDS = 12             # fields shown in distributions
 TOP_N_JOURNALS = 10
 TOP_N_COUNTRIES = 15
 
-# OpenAlex concept ID for "Particle image velocimetry" — used to filter out
-# false positives when software names are ambiguous (e.g. GPIV=medical term,
-# Flownizer≈flown, Dantec≈company with many product lines).
-PIV_CONCEPT_FILTER = "concepts.id:C207857233"
-
 # ---------------------------------------------------------------------------
 # Software registry
 # ---------------------------------------------------------------------------
 # Unified metric for ALL software:
-#   default.search:<fulltext_query>,concepts.id:C207857233
+#   default.search:<fulltext_query>,publication_year:<YEAR_MIN>-<YEAR_MAX>
 #
 # fulltext_query : term(s) passed to OpenAlex default.search (searches title,
 #                 abstract, and full-text body where indexed).  Quote phrases
 #                 to avoid stemming false-positives (e.g. "PaIRS-UniNa").
 #
-# The PIV concept filter (C207857233) is always applied.  It restricts
-# results to papers OpenAlex has ML-tagged as "Particle image velocimetry",
-# ensuring multi-purpose software names are counted only in a PIV context.
+# Every fulltext_query includes the literal phrase "particle image
+# velocimetry", so multi-purpose software names are only counted in a PIV
+# context.  No ML concept/topic tags are used.
 #
 # cite_ids : kept for reference / future supplementary analysis only.
 # ---------------------------------------------------------------------------
@@ -873,7 +868,7 @@ def fig_yearly_lines(df_yearly: pd.DataFrame, df_totals: pd.DataFrame) -> go.Fig
         margin=dict(r=220),
     )
     fig.add_annotation(
-        text="Unified metric: full-text search (title + abstract + body) + PIV concept filter (OpenAlex C207857233).",
+        text='Unified metric: exact-phrase full-text search (title + abstract + body) for the software name AND "particle image velocimetry".',
         xref="paper", yref="paper", x=0, y=-0.14,
         showarrow=False, font=dict(size=10), align="left",
     )
@@ -1143,7 +1138,7 @@ def fig_market_share(df_yearly: pd.DataFrame, piv_baseline: dict) -> go.Figure:
         yaxis_ticksuffix="%",
     )
     fig.add_annotation(
-        text="Denominator: total papers tagged with 'Particle image velocimetry' concept in OpenAlex.",
+        text='Denominator: all papers in OpenAlex whose full text contains "particle image velocimetry".',
         xref="paper", yref="paper", x=0, y=-0.12,
         showarrow=False, font=dict(size=10), align="left",
     )
