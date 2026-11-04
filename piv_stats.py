@@ -46,8 +46,9 @@ from plotly.subplots import make_subplots
 # Configuration
 # ---------------------------------------------------------------------------
 EMAIL = "thielickeoptolution@gmail.com"   # OpenAlex polite-pool identifier
-YEAR_MIN = 2010
+YEAR_WINDOW = 10             # how many fully completed years to analyse
 YEAR_MAX = date.today().year - 1  # last fully completed year
+YEAR_MIN = YEAR_MAX - YEAR_WINDOW + 1  # e.g. 2016 when YEAR_MAX is 2025
 CACHE_DIR = Path("cache")
 OUTPUT_DIR = Path("output")
 BASE_URL = "https://api.openalex.org"
@@ -586,7 +587,8 @@ def group_by_query(filter_str: str, group_by: str, cache_key: str,
         "group_by": group_by,
         "per_page": per_page,
     }
-    data = cached_get(cache_key, "/works", params)
+    # Year range in the cache name: a cached answer for another range is never reused
+    data = cached_get(f"{cache_key}_{YEAR_MIN}-{YEAR_MAX}", "/works", params)
     groups = data.get("group_by", [])
     total = data.get("meta", {}).get("count", 0)
     # tag total onto first element for convenience
@@ -621,7 +623,9 @@ def collect_yearly(sw: dict) -> dict[str, int]:
     result = {}
     for g in groups:
         k = g.get("key", "")
-        if k and k.isdigit():
+        # keep only years inside the analysis window (safety net: the query
+        # already filters by year, but totals must never include other years)
+        if k and k.isdigit() and YEAR_MIN <= int(k) <= YEAR_MAX:
             result[k] = g.get("count", 0)
     return result
 
@@ -735,7 +739,8 @@ def collect_piv_baseline() -> dict[str, int]:
     cache_key = "piv_baseline_total"
     piv_filter = 'default.search:"particle image velocimetry"'
     groups, _ = group_by_query(piv_filter, "publication_year", cache_key)
-    return {g["key"]: g["count"] for g in groups if g.get("key", "").isdigit()}
+    return {g["key"]: g["count"] for g in groups
+            if g.get("key", "").isdigit() and YEAR_MIN <= int(g["key"]) <= YEAR_MAX}
 
 
 def collect_all(force: bool = False) -> dict:
@@ -1095,19 +1100,6 @@ def fig_growth_heatmap(df_yearly: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def _add_partial_year_shape(fig: go.Figure, current_year: int) -> go.Figure:
-    """Add a vertical dashed line + annotation marking the current year as partial."""
-    fig.add_vline(
-        x=current_year, line_dash="dot", line_color="#999", line_width=1.5,
-    )
-    fig.add_annotation(
-        x=current_year, y=1, xref="x", yref="paper",
-        text=f"{current_year} (partial)", showarrow=False,
-        font=dict(size=9, color="#999"), xanchor="left", yanchor="top",
-    )
-    return fig
-
-
 def fig_market_share(df_yearly: pd.DataFrame, piv_baseline: dict) -> go.Figure:
     """Line chart: each software's papers as % of total PIV papers that year."""
     if not piv_baseline:
@@ -1155,7 +1147,6 @@ def fig_market_share(df_yearly: pd.DataFrame, piv_baseline: dict) -> go.Figure:
         xref="paper", yref="paper", x=0, y=-0.12,
         showarrow=False, font=dict(size=10), align="left",
     )
-    _add_partial_year_shape(fig, YEAR_MAX)
     return fig
 
 
@@ -1339,9 +1330,7 @@ def generate_html_report(all_data: dict, df_yearly: pd.DataFrame,
     # ---- Generate figures ----
     print("  Generating figures...")
     f_linear = fig_yearly_lines(df_yearly, df_totals)
-    _add_partial_year_shape(f_linear, YEAR_MAX)
     f_log = fig_yearly_log(df_yearly, df_totals)
-    _add_partial_year_shape(f_log, YEAR_MAX)
     figs = {
         "yearly_linear": f_linear,
         "yearly_log": f_log,
@@ -1471,12 +1460,13 @@ function toggleSection(h2) {{
       <li><strong>Commercial software</strong>: the company name must also appear in the text
           (e.g. "Dantec" AND "Dynamic Studio").</li>
     </ul>
-    Example filter: <code>default.search:"LaVision" AND "DaVis" AND "particle image velocimetry",publication_year:2010-{YEAR_MAX}</code><br>
+    Example filter: <code>default.search:"LaVision" AND "DaVis" AND "particle image velocimetry",publication_year:{YEAR_MIN}-{YEAR_MAX}</code><br>
     <strong>Known limitation:</strong> open-source tools (PIVlab, OpenPIV, …) are almost always
     named explicitly by authors; commercial tools are sometimes described only as "commercial software"
     without naming them. This means commercial tools may still be <em>undercounted</em> relative
     to their true usage, even with full-text search.<br>
-    Note: OpenAlex covers ~96% of the literature. Only fully completed years ({YEAR_MIN}&ndash;{YEAR_MAX}) are shown.
+    Note: OpenAlex covers ~96% of the literature. Only the last {YEAR_WINDOW} fully completed years ({YEAR_MIN}&ndash;{YEAR_MAX}) are shown;
+    the window moves forward by one year every January.
   </div>
   <h3>Search terms per software</h3>
   <table class="metric-legend"><thead><tr>

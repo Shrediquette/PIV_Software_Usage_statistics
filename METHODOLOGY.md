@@ -43,7 +43,7 @@ Example filter (LaVision DaVis):
 
 ```
 default.search:"LaVision" AND "DaVis" AND "particle image velocimetry",
-publication_year:2010-2025
+publication_year:2016-2025
 ```
 
 ### Rules that apply equally to all packages
@@ -57,7 +57,8 @@ publication_year:2010-2025
 - **Ambiguous short names** require a disambiguating token — an author surname for
   academic tools, a company name for commercial tools — exactly as a careful human
   reviewer would.
-- Only **fully completed years (2010–last full year)** are shown.
+- Only the **last 10 fully completed years** are shown (e.g. 2016–2025 in 2026).
+  The window moves forward by one year every January.
 
 ---
 
@@ -140,7 +141,7 @@ bracketed parts. It encodes the same rules used here.
 >    tools, including any you might personally favour.
 > 3. **Handle spelling/spacing variants** with OR-combined quoted phrases, but only
 >    keep a variant if it adds real papers without adding noise.
-> 4. **Restrict to fully completed years** and cache every API response to one JSON
+> 4. **Restrict to the last [10] fully completed years** and cache every API response to one JSON
 >    file per query so re-runs are fast and reproducible.
 > 5. Produce: a per-year trend, total counts, market share, an open-source vs.
 >    commercial split, field and country distributions, and an interactive HTML

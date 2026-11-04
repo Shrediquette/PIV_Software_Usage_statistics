@@ -7,7 +7,7 @@ The methodology is shown here:
 
 ## What this shows
 
-- Number of academic papers mentioning each PIV software package (2010–present)
+- Number of academic papers mentioning each PIV software package (the last 10 completed years, e.g. 2016–2025)
 - Trends over time, market share, and open source vs. commercial breakdown
 - Research fields and countries where each software is used
 - Journal quality indicator (weighted mean impact per software)
