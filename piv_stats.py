@@ -27,6 +27,7 @@ Output: output/piv_report.html   (interactive Plotly report)
         output/piv_data.xlsx      (all data as Excel workbook)
 """
 
+import html as html_lib
 import json
 import os
 import re
@@ -51,6 +52,9 @@ YEAR_MAX = date.today().year - 1  # last fully completed year
 YEAR_MIN = YEAR_MAX - YEAR_WINDOW + 1  # e.g. 2016 when YEAR_MAX is 2025
 CACHE_DIR = Path("cache")
 OUTPUT_DIR = Path("output")
+# Public address of the published report (GitHub Pages, served from docs/).
+# Used for search-engine and link-preview tags.
+PAGE_URL = "https://shrediquette.github.io/PIV_Software_Usage_statistics/"
 BASE_URL = "https://api.openalex.org"
 REQUEST_DELAY = 0.15          # seconds between API calls (polite crawling)
 # Free OpenAlex API key (https://openalex.org/settings/api). Without a key the
@@ -1312,6 +1316,94 @@ def fig_to_html(fig: go.Figure) -> str:
                        config={"displayModeBar": True, "responsive": True})
 
 
+def _top_list(pairs: list[tuple[str, int]], n: int) -> str:
+    """'A (12 papers), B (7), C (3)' for the n largest non-zero entries."""
+    pairs = [(name, c) for name, c in pairs if c > 0][:n]
+    parts = [f"{html_lib.escape(name)} ({c}{' papers' if i == 0 else ''})"
+             for i, (name, c) in enumerate(pairs)]
+    return ", ".join(parts)
+
+
+def build_intro_html(df_yearly: pd.DataFrame, df_totals: pd.DataFrame,
+                     piv_baseline: dict) -> str:
+    """Plain-text summary at the top of the page. Search engines read text much
+    better than charts, so the key numbers are also written out as sentences.
+    Regenerated on every run, so it is always current."""
+    last = df_yearly[df_yearly["year"] == YEAR_MAX].sort_values("count", ascending=False)
+    last_year_top = _top_list(list(zip(last["software"], last["count"])), 5)
+    total_top = _top_list(list(zip(df_totals["software"], df_totals["total"])), 5)
+    base_last = piv_baseline.get(str(YEAR_MAX), 0)
+    base_txt = (f" For comparison: OpenAlex lists {base_last:,} papers from {YEAR_MAX} "
+                f"that contain the phrase \"particle image velocimetry\"." if base_last else "")
+    return f"""<div class="section intro">
+  <p>This page compares how often <strong>{len(SOFTWARE)} PIV (particle image velocimetry)
+  software packages</strong> are mentioned in scientific papers. Every package is counted
+  with the same exact-phrase full-text search in <a href="https://openalex.org" target="_blank">OpenAlex</a>,
+  covering the last {YEAR_WINDOW} fully completed years ({YEAR_MIN}&ndash;{YEAR_MAX}).
+  The page is updated automatically every month.</p>
+  <p><strong>Most mentioned in {YEAR_MAX}:</strong> {last_year_top}.<br>
+  <strong>Most mentioned {YEAR_MIN}&ndash;{YEAR_MAX} in total:</strong> {total_top}.{base_txt}</p>
+</div>"""
+
+
+def build_seo_head(df_totals: pd.DataFrame, today: str) -> str:
+    """<head> tags for search engines and link previews (description, canonical
+    URL, Open Graph / Twitter cards) plus schema.org Dataset markup, which makes
+    the page eligible for Google Dataset Search."""
+    top_names = [n for n in df_totals.sort_values("total", ascending=False)["software"]][:4]
+    description = (
+        f"How often PIV software ({', '.join(top_names)} and {len(SOFTWARE) - len(top_names)} more) "
+        f"is mentioned in scientific papers, {YEAR_MIN}\u2013{YEAR_MAX}. "
+        f"Monthly statistics from OpenAlex, same search for every package."
+    )
+    title = f"PIV Software Usage Statistics {YEAR_MIN}\u2013{YEAR_MAX}"
+    image = PAGE_URL + "piv_top10.png"
+    dataset = {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": f"PIV software usage in the scientific literature ({YEAR_MIN}\u2013{YEAR_MAX})",
+        "description": (
+            f"Number of scientific papers per year that mention each of {len(SOFTWARE)} "
+            f"particle image velocimetry (PIV) software packages, {YEAR_MIN}\u2013{YEAR_MAX}, "
+            "with market share, research fields, countries and publication venues. "
+            "Every package is counted with the same exact-phrase full-text search in OpenAlex "
+            "(software name AND \"particle image velocimetry\"). Updated monthly."
+        ),
+        "url": PAGE_URL,
+        "keywords": ["particle image velocimetry", "PIV", "PIV software",
+                     "bibliometrics", "software citations", "OpenAlex"]
+                    + [sw["name"] for sw in SOFTWARE],
+        "creator": {"@type": "Person", "name": "W. Thielicke"},
+        "temporalCoverage": f"{YEAR_MIN}/{YEAR_MAX}",
+        "dateModified": today,
+        "isAccessibleForFree": True,
+        "isBasedOn": "https://openalex.org",
+        "measurementTechnique": "Exact-phrase full-text search via the OpenAlex API",
+        "variableMeasured": ["Papers per year per software", "Share of all PIV papers",
+                             "Research field distribution", "Country distribution",
+                             "Publication venue citedness"],
+        "image": image,
+    }
+    ld_json = json.dumps(dataset, ensure_ascii=False, indent=1).replace("</", "<\\/")
+    e = html_lib.escape
+    return f"""<meta name="description" content="{e(description)}">
+<link rel="canonical" href="{PAGE_URL}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{e(title)}">
+<meta property="og:description" content="{e(description)}">
+<meta property="og:url" content="{PAGE_URL}">
+<meta property="og:image" content="{image}">
+<meta property="og:image:width" content="2000">
+<meta property="og:image:height" content="960">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{e(title)}">
+<meta name="twitter:description" content="{e(description)}">
+<meta name="twitter:image" content="{image}">
+<script type="application/ld+json">
+{ld_json}
+</script>"""
+
+
 def generate_html_report(all_data: dict, df_yearly: pd.DataFrame,
                          df_totals: pd.DataFrame, df_fields: pd.DataFrame,
                          df_countries: pd.DataFrame,
@@ -1339,6 +1431,8 @@ def generate_html_report(all_data: dict, df_yearly: pd.DataFrame,
     }
 
     summary_html = build_summary_html(df_totals, all_data)
+    intro_html = build_intro_html(df_yearly, df_totals, piv_baseline)
+    seo_head = build_seo_head(df_totals, today)
 
     # ---- Search term table ----
     search_rows = ""
@@ -1356,13 +1450,15 @@ def generate_html_report(all_data: dict, df_yearly: pd.DataFrame,
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PIV Software Usage Statistics</title>
+<title>PIV Software Usage Statistics {YEAR_MIN}–{YEAR_MAX}: Papers per Software (OpenAlex)</title>
+{seo_head}
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js"></script>
 <style>
   body {{ font-family: Arial, sans-serif; margin: 0; background: #f8f9fa; color: #212529; }}
   .header {{ background: #1565C0; color: white; padding: 24px 36px; }}
   .header h1 {{ margin: 0 0 6px; font-size: 28px; }}
   .header p {{ margin: 0; opacity: 0.85; font-size: 14px; }}
+  .intro p {{ margin: 0 0 8px; line-height: 1.5; }}
   .content {{ max-width: 1400px; margin: 0 auto; padding: 24px 24px 60px; }}
   .section {{ background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
               margin-bottom: 24px; padding: 20px; }}
@@ -1425,6 +1521,8 @@ function toggleSection(h2) {{
   <p>Based on OpenAlex data &bull; Generated {today} &bull; Years {YEAR_MIN}–{YEAR_MAX}</p>
 </div>
 <div class="content">
+
+{intro_html}
 
 <div class="section">
   <h2 onclick="toggleSection(this)" class="collapsed">Methodology <span class="toggle-icon">▼</span></h2>
