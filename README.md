@@ -29,6 +29,12 @@ https://shrediquette.github.io/PIV_Software_Usage_statistics/
 
 Updated automatically on the 1st of every month via GitHub Actions.
 
+## License
+
+The published statistics (numbers, charts, report) are released under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (public domain),
+like the underlying OpenAlex data.
+
 ## Local usage
 
 ```bash
