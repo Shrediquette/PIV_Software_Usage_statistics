@@ -212,7 +212,8 @@ SOFTWARE = [
         "name": "PIVmat",
         "category": "Open Source",
         "developer": "F. Moisy",
-        "url": "http://www.fast.u-psud.fr/pivmat/",
+        # Old home www.fast.u-psud.fr no longer resolves; File Exchange is current.
+        "url": "https://www.mathworks.com/matlabcentral/fileexchange/10902",
         "color": "#BF360C",
         "fulltext_query": '"PIVmat" AND "particle image velocimetry"',
         "cite_ids": [],
@@ -265,7 +266,8 @@ SOFTWARE = [
         "name": "DPIVSoft",
         "category": "Open Source",
         "developer": "P. Meunier & T. Leweke",
-        "url": "https://github.com/PIVSOFT",
+        # P. Meunier's page (IRPHE) hosts the original Matlab DPIVSoft download.
+        "url": "https://www.irphe.fr/~meunier/",
         "color": "#009688",
         # "DPIVSoft" is a highly specific token; 22/23 results co-occur with the
         # author "Meunier".  Empirical (2010-2025): "DPIVSoft" + PIV = 23 (clean).
@@ -308,7 +310,8 @@ SOFTWARE = [
         "name": "EDPIV",
         "category": "Free / Academic",
         "developer": "L. Gui",
-        "url": "http://www.lcgui.net/",
+        # lcgui.net no longer resolves; archived copy of the original site.
+        "url": "https://web.archive.org/web/20190918032612/http://lcgui.net/",
         "color": "#F4511E",
         # "EDPIV" (Easy Digital PIV) is a specific token.  Empirical (2010-2025):
         # "EDPIV" + PIV = 10 (river surface velocimetry, microfluidics — all clean).
@@ -356,7 +359,7 @@ SOFTWARE = [
         "name": "Dantec Dynamic Studio / FlowManager",
         "category": "Commercial",
         "developer": "Dantec Dynamics",
-        "url": "https://www.dantecdynamics.com/dynamicstudio/",
+        "url": "https://www.dantecdynamics.com/components/dynamicstudio/",
         "color": "#FF6F00",
         # Company "Dantec" AND software (DynamicStudio = current, FlowManager =
         # its pre-2010 predecessor) AND PIV phrase.  FlowManager merged in here
@@ -373,7 +376,8 @@ SOFTWARE = [
         "name": "TSI Insight",
         "category": "Commercial",
         "developer": "TSI Inc.",
-        "url": "https://tsi.com/",
+        # TSI lists its PIV systems (Insight 4G) under discontinued products.
+        "url": "https://tsi.com/discontinued-products/piv-system-2d-measurement",
         "color": "#00695C",
         # "TSI Insight" phrase includes company + software; "Insight 4G" is a newer version name.
         # "TSI" AND "Insight" separately is risky: "insight" is a very common English word.
@@ -400,7 +404,9 @@ SOFTWARE = [
         "name": "IDT ProVision",
         "category": "Commercial",
         "developer": "IDT",
-        "url": "https://idtvision.com/products/software/provision/",
+        # The old page now redirects to idtcameras.com, which no longer lists
+        # proVISION; archived copy of the product page.
+        "url": "https://web.archive.org/web/20250116141853/https://idtvision.com/products/software/provision/",
         "color": "#01579B",
         # Company "IDT" AND software "ProVision" AND PIV phrase
         "fulltext_query": '"IDT" AND "ProVision" AND "particle image velocimetry"',
@@ -452,7 +458,8 @@ SOFTWARE = [
         "name": "VidPIV",
         "category": "Commercial",
         "developer": "Oxford Lasers",
-        "url": "https://www.oxfordlasers.com/imaging/particle-image-velocimetry-piv/particle-image-velocimetry-software-vidpiv/",
+        # Oxford Lasers no longer lists PIV products (page 404); archived copy.
+        "url": "https://web.archive.org/web/20191118183933/https://www.oxfordlasers.com/imaging/particle-image-velocimetry-piv/particle-image-velocimetry-software-vidpiv/",
         "color": "#9E9D24",
         "fulltext_query": '"VidPIV" AND "particle image velocimetry"',
         "cite_ids": [],
@@ -464,7 +471,7 @@ SOFTWARE = [
         "name": "ILA PIVtec",
         "category": "Commercial",
         "developer": "ILA GmbH / PIVtec",
-        "url": "https://www.ila5150.de/en/components/software",
+        "url": "https://www.ila5150.de/components/software",
         "color": "#006064",
         # "PIVtec" is the specific product brand; "ILA" alone is too ambiguous
         "fulltext_query": '"PIVtec" AND "particle image velocimetry"',
@@ -477,7 +484,8 @@ SOFTWARE = [
         "name": "YSC Flow Analyzer",
         "category": "Commercial",
         "developer": "YSC Corp.",
-        "url": "http://ysctech.com/Image-Analysis-Software-Flow-Analyzer.html",
+        # ysctech.com no longer resolves; archived copy of the company site.
+        "url": "https://web.archive.org/web/20180510112129/http://www.ysctech.com/",
         "color": "#4E342E",
         "fulltext_query": '"YSC" AND "particle image velocimetry"',
         "cite_ids": [],
