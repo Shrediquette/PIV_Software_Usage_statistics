@@ -484,6 +484,22 @@ SOFTWARE = [
         "active_since": 2005,
         "note": 'Exact phrase "YSC" + PIV phrase',
     },
+    {
+        "id": "eyepiv",
+        "name": "eyePIV",
+        "category": "Commercial",
+        "developer": "eye4you",
+        "url": "https://eye-4you.com/eyepiv/",
+        "color": "#5D4037",
+        # GPU optical-flow velocimetry plug-in for eye4you's eyeMOTION software
+        # (one vector per pixel, real time).  Related papers: Pimienta & Aider
+        # ("live optical flow velocimetry").  "eyePIV" is a specific token, so
+        # the company name is not also required (same as MicroVec, VidPIV).
+        "fulltext_query": '"eyePIV" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2024,
+        "note": 'Exact phrase "eyePIV" + PIV phrase',
+    },
 ]
 
 # ---------------------------------------------------------------------------
