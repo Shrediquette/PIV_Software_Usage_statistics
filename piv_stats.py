@@ -1397,6 +1397,7 @@ def build_seo_head(df_totals: pd.DataFrame, today: str) -> str:
         "temporalCoverage": f"{YEAR_MIN}/{YEAR_MAX}",
         "dateModified": today,
         "isAccessibleForFree": True,
+        "license": "https://creativecommons.org/publicdomain/zero/1.0/",
         "isBasedOn": "https://openalex.org",
         "measurementTechnique": "Exact-phrase full-text search via the OpenAlex API",
         "variableMeasured": ["Papers per year per software", "Share of all PIV papers",
@@ -1682,7 +1683,8 @@ function toggleSection(h2) {{
 <div class="footer">
   Data source: <a href="https://openalex.org">OpenAlex</a> &mdash;
   Last updated: {today} &mdash;
-  Auto-refreshed monthly via <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics">GitHub Actions</a>
+  Auto-refreshed monthly via <a href="https://github.com/Shrediquette/PIV_Software_Usage_statistics">GitHub Actions</a> &mdash;
+  Statistics released under <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</a>
 </div>
 
 </div>
