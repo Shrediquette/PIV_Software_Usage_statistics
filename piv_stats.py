@@ -349,10 +349,13 @@ SOFTWARE = [
         # Reason: papers routinely write "DaVis 8.3 (LaVision, Göttingen)" where the
         # words are not adjacent.  Adjacent-phrase search misses ~3× papers.
         # This aligns with the methodology of the PIVlab popularity blog post (2022).
-        "fulltext_query": '"LaVision" AND "DaVis" AND "particle image velocimetry"',
+        # "FlowMaster" is LaVision's name for its (DaVis-based) PIV system; some
+        # papers name only that.  Empirical (2016-2025): DaVis-only = 1512,
+        # +FlowMaster = 1550 (+38, all PIV).
+        "fulltext_query": '"LaVision" AND ("DaVis" OR "FlowMaster") AND "particle image velocimetry"',
         "cite_ids": [],
         "active_since": 1995,
-        "note": '"LaVision" (company) AND "DaVis" (software, non-adjacent) AND PIV phrase',
+        "note": '"LaVision" (company) AND ("DaVis" OR "FlowMaster", non-adjacent) AND PIV phrase',
     },
     {
         "id": "dantec_ds",
@@ -381,10 +384,12 @@ SOFTWARE = [
         "color": "#00695C",
         # "TSI Insight" phrase includes company + software; "Insight 4G" is a newer version name.
         # "TSI" AND "Insight" separately is risky: "insight" is a very common English word.
-        "fulltext_query": '("TSI Insight" OR "Insight 4G" OR "Insight4G") AND "particle image velocimetry"',
+        # "Insight 3G" is the version before 4G.  Empirical (2016-2025):
+        # without 3G = 233, with 3G = 290 (+57).
+        "fulltext_query": '("TSI Insight" OR "Insight 4G" OR "Insight4G" OR "Insight 3G" OR "Insight3G") AND "particle image velocimetry"',
         "cite_ids": [],
         "active_since": 1999,
-        "note": 'Phrase "TSI Insight" OR "Insight 4G"/"Insight4G" (version name) + PIV phrase',
+        "note": 'Phrase "TSI Insight" OR "Insight 4G"/"Insight 3G" (version names, both spellings) + PIV phrase',
     },
     {
         "id": "pivview",
@@ -511,6 +516,165 @@ SOFTWARE = [
         "cite_ids": [],
         "active_since": 2024,
         "note": 'Exact phrase "eyePIV" + PIV phrase',
+    },
+    # ---- Added Nov 2026 after a broader search (general, river LSPIV, biology) ----
+    # Empirical counts are for 2016-2025; sample titles were checked for each.
+    {
+        "id": "koncerto",
+        "name": "Koncerto (Seika)",
+        "category": "Commercial",
+        "developer": "Seika Digital Image Corp.",
+        "url": "https://www.seika-di.com/measurement/combustion/piv.html",
+        "color": "#827717",
+        # Specific product token.  Empirical: 24 (Japanese wind-tunnel, spray,
+        # ventilation studies; clean).
+        "fulltext_query": '"Koncerto" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2005,
+        "note": 'Exact phrase "Koncerto" + PIV phrase',
+    },
+    {
+        "id": "flowexpert",
+        "name": "Flow Expert (Kato Koken)",
+        "category": "Commercial",
+        "developer": "Kato Koken Co., Ltd.",
+        # Company site not reachable from outside Japan; product-family listing.
+        "url": "https://www.ipros.com/product/detail/2000534076/",
+        "color": "#C2185B",
+        # "Flow Expert" alone is generic, so the company name is required.
+        # Empirical: 20 (clean).
+        "fulltext_query": '"Flow Expert" AND ("Kato Koken" OR "Katokoken") AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2005,
+        "note": '"Flow Expert" AND company ("Kato Koken" | "Katokoken") + PIV phrase',
+    },
+    {
+        "id": "folki",
+        "name": "FOLKI-SPIV (ONERA)",
+        "category": "Free / Academic",
+        "developer": "ONERA (Champagnat et al.)",
+        "url": "https://www.onera.fr/en/news/computing-power-at-the-service-of-measurement",
+        "color": "#512DA8",
+        # GPU Lucas-Kanade PIV (Champagnat et al., Exp Fluids 2011).  Specific
+        # token; covers FOLKI, FOLKI-PIV and FOLKI-SPIV.  Empirical: 33 (ONERA
+        # studies plus method comparisons).
+        "fulltext_query": '"FOLKI" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2011,
+        "note": 'Exact phrase "FOLKI" (covers FOLKI-PIV / FOLKI-SPIV) + PIV phrase',
+    },
+    {
+        "id": "openopticalflow",
+        "name": "OpenOpticalFlow",
+        "category": "Open Source",
+        "developer": "T. Liu (Western Michigan Univ.)",
+        "url": "https://github.com/Tianshu-Liu/OpenOpticalFlow",
+        "color": "#0097A7",
+        # Covers OpenOpticalFlow_PIV too.  Empirical: 13 (clean).
+        "fulltext_query": '"OpenOpticalFlow" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2017,
+        "note": 'Exact phrase "OpenOpticalFlow" (covers OpenOpticalFlow_PIV) + PIV phrase',
+    },
+    {
+        "id": "fudaa_lspiv",
+        "name": "Fudaa-LSPIV",
+        "category": "Free / Academic",
+        "developer": "INRAE & EDF",
+        "url": "https://riverhydraulics.riverly.inrae.fr/eng/tools/measurement-software/fudaa-lspiv",
+        "color": "#689F38",
+        # River-surface LSPIV.  Empirical: 92 (river discharge / UAV studies;
+        # clean).
+        "fulltext_query": '("Fudaa-LSPIV" OR "Fudaa LSPIV") AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2015,
+        "note": '"Fudaa-LSPIV" OR "Fudaa LSPIV" + PIV phrase',
+    },
+    {
+        "id": "river",
+        "name": "RIVeR",
+        "category": "Open Source",
+        "developer": "A. Patalano et al. (UNC, Argentina)",
+        "url": "https://github.com/aPatal/RIVeR",
+        "color": "#D84315",
+        # "RIVeR" alone matches the word "river" (search is case-insensitive),
+        # so the full name is required.  Empirical: 62 (clean).  The looser
+        # "RIVeR" AND "Patalano" (= 109) also matches papers citing Patalano's
+        # other work, so it was rejected.
+        "fulltext_query": '"Rectification of Image Velocity Results" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2017,
+        "note": 'Full name "Rectification of Image Velocity Results" + PIV phrase ("RIVeR" alone = "river")',
+    },
+    {
+        "id": "klt_iv",
+        "name": "KLT-IV",
+        "category": "Open Source",
+        "developer": "M. Perks (Newcastle Univ.)",
+        "url": "https://github.com/catchmentsci/klt-iv",
+        "color": "#5C6BC0",
+        # Specific token.  Empirical: 40 (river velocimetry; clean).
+        "fulltext_query": '"KLT-IV" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2020,
+        "note": 'Exact phrase "KLT-IV" + PIV phrase',
+    },
+    {
+        "id": "hydro_stiv",
+        "name": "Hydro-STIV",
+        "category": "Commercial",
+        "developer": "Hydro Technology Institute Co., Ltd.",
+        "url": "https://hydrosoken.co.jp/en/hydrostiv/",
+        "color": "#8D6E63",
+        # Space-time image velocimetry for rivers (from I. Fujita's KU-STIV).
+        # Empirical: 19 (clean).
+        "fulltext_query": '("Hydro-STIV" OR "HydroSTIV") AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2016,
+        "note": '"Hydro-STIV" OR "HydroSTIV" + PIV phrase',
+    },
+    {
+        "id": "imagej_piv",
+        "name": "ImageJ PIV plugin (Tseng)",
+        "category": "Open Source",
+        "developer": "Q. Tseng",
+        "url": "https://sites.google.com/site/qingzongtseng/piv",
+        "color": "#00897B",
+        # Iterative PIV plugin for ImageJ/Fiji, widely used in cell biology.
+        # "Tseng" as the anchor is too noisy (common surname: 171 hits), so the
+        # plugin wording is required next to ImageJ/Fiji.  Empirical: 74
+        # (mostly cell/tissue motion; a few doubtful).
+        "fulltext_query": '("ImageJ" OR "Fiji") AND ("PIV plugin" OR "iterative PIV") AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2012,
+        "note": '("ImageJ" OR "Fiji") AND ("PIV plugin" OR "iterative PIV") + PIV phrase',
+    },
+    {
+        "id": "quickpiv",
+        "name": "QuickPIV",
+        "category": "Open Source",
+        "developer": "M. Pereyra et al.",
+        "url": "https://github.com/Marc-3d/quickPIV",
+        "color": "#AFB42B",
+        # 3D PIV in Julia for cell migration.  Empirical: 7 (clean).
+        "fulltext_query": '"QuickPIV" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2021,
+        "note": 'Exact phrase "QuickPIV" + PIV phrase',
+    },
+    {
+        "id": "piv_myomonitor",
+        "name": "PIV-MyoMonitor",
+        "category": "Open Source",
+        "developer": "Lee et al.",
+        "url": "https://github.com/soahleelab/PIV-MyoMonitor",
+        "color": "#7B1FA2",
+        # Cardiac-organoid contractility (uses PIVlab's piv_FFTmulti).
+        # Empirical: 7 (clean).
+        "fulltext_query": '"PIV-MyoMonitor" AND "particle image velocimetry"',
+        "cite_ids": [],
+        "active_since": 2024,
+        "note": 'Exact phrase "PIV-MyoMonitor" + PIV phrase',
     },
 ]
 
